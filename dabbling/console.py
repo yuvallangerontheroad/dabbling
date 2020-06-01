@@ -1,6 +1,7 @@
 import click
 
-from . import __version__, dragon_curve, matplotlib, path_to_svg_file_content
+from . import __version__
+from .dragon_curve import dragon_curve, path_to_svg_file_content, write_matplotlib_png
 
 
 @click.command()
@@ -11,5 +12,7 @@ def main():
     svg_content = path_to_svg_file_content(l)
     with open('dragon_curve.svg', 'w') as f:
         f.write(svg_content)
-    matplotlib(l)
+
+    write_matplotlib_png(l)
+
     click.echo(l)
