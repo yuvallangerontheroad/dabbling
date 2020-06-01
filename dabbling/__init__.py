@@ -17,13 +17,13 @@ def dragon_curve(generation_number: int) -> PathType:
     for i in range(generation_number):
         new_portion = [ccw(n) for n in l[1:]]
         new_pivot = new_portion[-1]
-        l = new_portion + l
+        l = new_portion[::-1] + l
         l = [
                 [n[0] - new_pivot[0],
                     n[1] - new_pivot[1]]
                 for n in l]
 
-        return l
+    return l
 
 
 def matplotlib(dragon_curve_path: PathType):
@@ -37,11 +37,21 @@ def matplotlib(dragon_curve_path: PathType):
 
 
 def path_to_svg_file_content(path: PathType) -> str:
-    svg_path = ''.join(f'M{p[0]} {p[1]} ' for p in path).strip()
-    return '''
+    min_x = min(p[0] for p in path)
+    min_y = min(p[1] for p in path)
+
+    path = [(p[0] - min_x, p[1] - min_y) for p in path]
+
+    max_x = max(p[0] for p in path)
+    max_y = max(p[1] for p in path)
+
+    path = [(200 * p[0] / max_x, 200 * p[1] / max_y) for p in path]
+
+    svg_path = ''.join(f'L{p[0]} {p[1]} ' for p in path).strip()
+    return f'''
 <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
 
-  <path d="{svg_path}"/>
+  <path d="M0 0 {svg_path}"/>
 
 </svg>
     '''.strip()
