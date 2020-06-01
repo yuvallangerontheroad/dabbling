@@ -36,7 +36,11 @@ def matplotlib(dragon_curve_path: PathType):
     plt.savefig('dragon-curve.png')
 
 
-def path_to_svg_file_content(path: PathType) -> str:
+def path_to_svg_file_content(
+        path: PathType,
+        image_width = 1000,
+        image_height = 1000,
+    ) -> str:
     min_x = min(p[0] for p in path)
     min_y = min(p[1] for p in path)
 
@@ -45,13 +49,13 @@ def path_to_svg_file_content(path: PathType) -> str:
     max_x = max(p[0] for p in path)
     max_y = max(p[1] for p in path)
 
-    path = [(200 * p[0] / max_x, 200 * p[1] / max_y) for p in path]
+    path = [(image_width * p[0] / max_x, image_height * p[1] / max_y) for p in path]
 
-    svg_path = ''.join(f'L{p[0]} {p[1]} ' for p in path).strip()
+    svg_path = f'M{path[0][0]} {path[0][1]}' + ''.join(f'L{p[0]} {p[1]} ' for p in path).strip()
     return f'''
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+<svg width="{image_width}" height="{image_height}" xmlns="http://www.w3.org/2000/svg">
 
-  <path d="M0 0 {svg_path}"/>
+  <path fill="none" stroke="black" stroke-linejoin="round" stroke-width="0.7" d="{svg_path}"/>
 
 </svg>
     '''.strip()
