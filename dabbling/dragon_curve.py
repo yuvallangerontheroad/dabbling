@@ -36,24 +36,36 @@ def write_matplotlib_png(dragon_curve_path: PathType):
     plt.savefig('dragon-curve.png')
 
 
+def transform(values, low, high):
+    min_value = min(values)
+    max_value = max(values)
+    old_difference = max_value - min_value
+    new_difference = high - low
+    # values = [n - min_value for n in values] # [0, max-min = old_difference]
+    # values = [n / old_difference for n in values] # [0, 1]
+    # values = [n * new_difference for n in values] # [0, new_difference = high - low]
+    # values = [n + low for n in values] # [low, high]
+    return [(n - min_value) * new_difference / old_difference + low
+            for n in values]
+
+
 def path_to_svg_file_content(
         path: PathType,
-        image_width = 1000,
-        image_height = 1000,
+        image_width=500,
+        image_height=500,
+        left_border=50,
+        right_border=50,
+        bottom_border=50,
+        top_border=50,
     ) -> str:
-    min_x = min(p[0] for p in path)
-    min_y = min(p[1] for p in path)
+    path = list(zip(
+        transform([p[0] for p in path], left_border, image_width - right_border),
+        transform([p[1] for p in path], top_border, image_width - bottom_border)))
 
-    path = [(p[0] - min_x, p[1] - min_y) for p in path]
+    svg_path = ''.join(f'L{p[0]} {p[1]}' for p in path)
 
-    max_x = max(p[0] for p in path)
-    max_y = max(p[1] for p in path)
-
-    path = [(image_width * p[0] / max_x, image_height * p[1] / max_y) for p in path]
-
-    svg_path = ''.join(f'L{p[0]} {p[1]}' for p in path).strip()
     return f'''
-<svg width="{image_width}" height="{image_height}" xmlns="http://www.w3.org/2000/svg">
+<svg width="{image_width}" height="{image_height}" fill="white" xmlns="http://www.w3.org/2000/svg">
 
   <path fill="none" stroke="black" stroke-linejoin="round" stroke-width="0.7" d="M{path[0][0]} {path[0][1]}{svg_path}"/>
 
