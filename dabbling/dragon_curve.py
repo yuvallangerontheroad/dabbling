@@ -71,3 +71,44 @@ def path_to_svg_file_content(
 
 </svg>
     '''.strip()
+
+
+def path_to_curvy_svg_no_clue(
+        path: PathType,
+        image_width=500,
+        image_height=500,
+        left_border=50,
+        right_border=50,
+        bottom_border=50,
+        top_border=50,
+    ) -> str:
+    '''
+    path = list(zip(
+        transform([p[0] for p in path], left_border, image_width - right_border),
+        transform([p[1] for p in path], top_border, image_width - bottom_border)))
+    '''
+
+    min_x = min(p[0] for p in path)
+    min_y = min(p[1] for p in path)
+    max_x = max(p[0] for p in path)
+    max_y = max(p[1] for p in path)
+
+    stroke_width = (max_x - min_x) * 0.01
+
+    consecutives = list(zip(path[:-1], path[1:]))
+
+    svg_path = ''.join(f'L{p[0]} {p[1]}' for p in path)
+
+    svg_path += (
+        ''.join(
+            f'M{pair[0][0]} {pair[0][1]}'
+            f'A2 2 0 0 0 {pair[1][0]} {pair[1][1]}'
+            for pair in consecutives))
+
+    return f'''
+<svg width="{image_width}" height="{image_height}" viewBox="{min_x-1} {min_y-1} {max_x-min_x+1} {max_y-min_y+1}" fill="white" xmlns="http://www.w3.org/2000/svg">
+
+  <path fill="none" stroke="black" stroke-linejoin="round" stroke-width="{stroke_width}" d="M{path[0][0]} {path[0][1]}{svg_path}"/>
+
+</svg>
+    '''.strip()
