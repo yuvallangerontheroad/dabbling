@@ -1,2 +1,4 @@
 dabbling.egg-info
 dabbling/__pycache__
+*.png
+*.svg
