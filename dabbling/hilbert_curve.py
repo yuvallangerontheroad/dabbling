@@ -14,14 +14,14 @@ def mirror_on_xy(path):
 
 def right_flip(path):
     path = mirror_on_y(path)
-    path = [(p[1], p[0]) for p in path]
+    path = mirror_on_xy(path)
     path = mirror_on_y(path)
 
     return path
 
 
 def left_flip(path):
-    return [(p[1], p[0]) for p in path]
+    return mirror_on_xy(path)
 
 
 def hilbert_curve(iterations=3):
