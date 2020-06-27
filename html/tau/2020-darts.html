@@ -14,30 +14,11 @@ canvas {
 (
 	function() {
 		let points = [];
-		let min_size_factor = 1;
-		let max_size_factor = 100;
-		let current_size_factor_phase = 0.0;
-		let size_factor_phase_increment = 0.01;
 		function lerp(from, to, t) {
 			return to * t + from * (1 - t);
 		}
-		function saw(phase) {
-			let new_phase = phase % 1.0;
-			let signal = 0;
-			if (new_phase < 0.25) {
-				signal = lerp(0, 1, new_phase / 0.25);
-			} else if (new_phase < 0.75) {
-				signal = lerp(1, -1, (new_phase - 0.25) / 0.5);
-			} else {
-				signal = lerp(-1, 0, (new_phase - 0.75) / 0.25);
-			};
-			return signal;
-		}
 		function unit_coordinate_to_canvas_coordinate(unit_x, canvas_length, margin) {
 			return lerp(canvas_length * margin, canvas_length * (1 - margin), (unit_x + 1)/2);
-		}
-		function index_to_unit_coordinate(i, points_on_edge, size_factor) {
-			return (2 * i / (points_on_edge - 1) - 1) * size_factor;
 		}
 		function main() {
 			let canvas = document.querySelector('#canvas');
@@ -46,13 +27,9 @@ canvas {
 			c.fillRect(0, 0, canvas.width, canvas.height);
 			let margin = 0.1;
 
-			let size_factor_signal = saw(current_size_factor_phase);
-			let current_size_factor = lerp(max_size_factor, min_size_factor, (size_factor_signal + 1) / 2);
-
 			c.beginPath();
 			c.arc(canvas.width / 2, canvas.height / 2, 0.5 * canvas.width - margin * canvas.width, 0, 2 * Math.PI, false);
 			c.stroke();
-			let points_on_edge = 100;
 			let number_of_points = 0;
 			let number_of_points_inside = 0;
 			points.push(lerp(-1, 1, Math.random()));
@@ -80,11 +57,15 @@ canvas {
 				c.fill();
 			};
 
-			current_size_factor_phase = (current_size_factor_phase + size_factor_phase_increment) % 1.0;
-
 			c.fillStyle = 'blue';
-			c.font = '10px helvetica';
-			c.fillText(`τ (approx): ${8 * number_of_points_inside / number_of_points} #points: ${number_of_points} #inside: ${number_of_points_inside}`, 10, 10);
+			c.font = '10px serif';
+			let tau_approximation = 8 * number_of_points_inside / number_of_points;
+			c.fillText(`τ: ${Math.floor(tau_approximation * 100) / 100}  = (8 * ${number_of_points_inside} / ${number_of_points}) error: ${Math.abs(Math.PI * 2 - tau_approximation)}`, 10, 10);
+			if (Math.abs(2 * Math.PI - tau_approximation) < 0.001) {
+				c.font = '40px serif';
+				c.fillText('HAPPY τ DAY!', 20, 50);
+				return;
+			}
 			window.requestAnimationFrame(main);
 		};
 
