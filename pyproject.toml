@@ -17,11 +17,16 @@ click = "^7.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^"
+mypy = "^0.780"
+coverage = {extras = ["toml"], version = "^5.1"}
+pytest-cov = "^2.9.0"
+black = "^19.10b0"
+
+[tool.poetry.scripts]
+dragon-curve = "src.dabbling.console:main_dragon"
+hilbert-curve = "src.dabbling.console:main_hilbert"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-[tool.poetry.scripts]
-dragon-curve = "dabbling.console:main_dragon"
-hilbert-curve = "dabbling.console:main_hilbert"
