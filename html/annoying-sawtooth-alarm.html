@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+	<script type="text/javascript">
+'use strict';
+
+
+(function() {
+	function main() {
+		let f = 440;
+		let v = 1;
+		let audio = new window.AudioContext;
+
+		let oscillator = audio.createOscillator();
+
+		oscillator.type = 'sine';
+		oscillator.frequency.setValueAtTime(f, audio.currentTime);
+		oscillator.connect(audio.destination);
+		oscillator.start();
+
+		function changeFrequency() {
+			//alert(f);
+			if ((f > 880) || (f < 440)) {
+				f = Math.min(Math.max(f, 440), 880);
+				v *= -1;
+			};
+
+			f += 10 * v;
+
+			oscillator.type = 'sawtooth';
+			oscillator.frequency.setValueAtTime(f, audio.currentTime);
+			oscillator.connect(audio.destination);
+			//oscillator.start();
+
+			window.setTimeout(changeFrequency, 10);
+		};
+
+		window.setTimeout(changeFrequency, 10);
+	};
+
+	window.addEventListener('load', main);
+})();
+	</script>
+	</head>
+	<body>
+	</body>
+</html>
