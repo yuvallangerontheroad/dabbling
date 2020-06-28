@@ -13,6 +13,11 @@ canvas {
 
 (
 	function() {
+		// COME ON ECMA!
+		// It is that easy!
+		// Get to it!
+		Math.TAU = 2 * Math.PI;
+
 		let number_of_points = 0;
 		let number_of_points_inside = 0;
 		function lerp(from, to, t) {
@@ -27,7 +32,7 @@ canvas {
 			let margin = 0.1;
 
 			c.beginPath();
-			c.arc(canvas.width / 2, canvas.height / 2, 0.5 * canvas.width - margin * canvas.width, 0, 2 * Math.PI, false);
+			c.arc(canvas.width / 2, canvas.height / 2, 0.5 * canvas.width - margin * canvas.width, 0, Math.TAU, false);
 			c.stroke();
 			let unit_x = lerp(-1, 1, Math.random());
 			let unit_y = lerp(-1, 1, Math.random());
@@ -43,20 +48,20 @@ canvas {
 				c.fillStyle = 'black';
 			};
 			c.beginPath();
-			c.arc(canvas_x, canvas_y, 1, 0, 2 * Math.PI, false);
+			c.arc(canvas_x, canvas_y, 1, 0, Math.TAU, false);
 			c.fill();
-
 			let tau_approximation = 8 * number_of_points_inside / number_of_points;
-			let tau_error = Math.abs(Math.PI * 2 - tau_approximation);
-			let tau_text = `τ: ${Math.floor(tau_approximation * 100) / 100}
+			let tau_error = Math.TAU - tau_approximation;
+			let tau_text = `τ approximation =
+= ${Math.floor(tau_approximation * 100) / 100}
       ${number_of_points_inside}
 = 8 * ------
       ${number_of_points}
 
-error: ${tau_error}`;
+error = ${tau_error}`;
 			let tau_text_element = document.querySelector('#text');
 			tau_text_element.innerText = tau_text;
-			if (Math.abs(2 * Math.PI - tau_approximation) < 0.001) {
+			if (Math.abs(tau_error) < 0.001) {
 				tau_text = `${tau_text}
 HAPPY τ DAY!`;
 				tau_text_element.innerText = tau_text;
