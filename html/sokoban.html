@@ -2,10 +2,33 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Kaka Farm Sokoban clone: no bells no whistles no glory.</title>
+		<title>Kaka Farm's Sokoban clone: no bells no whistles no glory.</title>
 		<script type="text/javascript" src="sokoban.js"></script>
 		<script type="text/javascript">
 'use strict';
+
+(function() {
+	function main() {
+		let state = sokoban.read_level_text(sokoban.level1);
+		let text_element = document.querySelector('#text');
+		text_element.innerText = sokoban.state_to_text(state);
+
+		[
+			['#up', [0, -1]],
+			['#down', [0, 1]],
+			['#left', [-1, 0]],
+			['#right', [1, 0]],
+		].forEach(([id, direction])=>{
+			let button = document.querySelector(id);
+			button.addEventListener('click', function() {
+				sokoban.step(state, direction);
+				text_element.innerText = sokoban.state_to_text(state);
+			});
+		});
+	};
+
+	window.addEventListener('load', main);
+})();
 		</script>
 	</head>
 	<body>
