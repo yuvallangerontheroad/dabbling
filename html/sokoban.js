@@ -204,4 +204,13 @@ let sokoban = (function() {
 			console.log(is_win(state));
 		}
 	);
+
+
+	return {
+		step,
+		is_win,
+		level1,
+		read_level_text,
+		state_to_text,
+	};
 })();
