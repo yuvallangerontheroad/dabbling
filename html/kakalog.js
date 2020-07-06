@@ -8,9 +8,10 @@ console.log('kakalog.js start.');
 	function change_console() {
 		if (window.kakalog_activated) {
 			[
-				'log',
+				'debug',
 				'error',
 				'info',
+				'log',
 				'trace',
 			].forEach(function_name=>{
 				let old_function = console[function_name];
