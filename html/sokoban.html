@@ -4,27 +4,39 @@
 		<meta charset="utf-8">
 		<title>Kaka Farm's Sokoban clone: no bells no whistles no glory.</title>
 		<link href="sokoban.css" rel="stylesheet"></style>
+		<script type="text/javascript">
+'use strict';
+
+
+window.kakalog_activated = true;
+		</script>
+		<script type="text/javascript" src="kakalog.js"></script>
 		<script type="text/javascript" src="sokoban.js"></script>
 		<script type="text/javascript">
 'use strict';
 
+
 (function() {
 	function main() {
-		let state = sokoban.read_level_text(sokoban.level1);
-		let text_element = document.querySelector('#text');
-		text_element.innerText = sokoban.state_to_text(state);
+		let game = sokoban.load_game();
+		let text_element = document.getElementById('text');
+		text_element.innerText = sokoban.game_to_text(game);
 
 		[
-			['#up', [0, -1]],
-			['#down', [0, 1]],
-			['#left', [-1, 0]],
-			['#right', [1, 0]],
-		].forEach(([id, direction])=>{
-			let button = document.querySelector(id);
-			button.addEventListener('click', function() {
-				sokoban.step(state, direction);
-				text_element.innerText = sokoban.state_to_text(state);
-			});
+			['up', sokoban.action_step_up],
+			['down', sokoban.action_step_down],
+			['left', sokoban.action_step_left],
+			['right', sokoban.action_step_right],
+			['next_level', sokoban.action_next_level],
+		].forEach(([element_id, action_function])=>{
+			let button = document.getElementById(element_id);
+			console.debug(button)
+			function click_handler() {
+				console.debug('click: ' + element_id);
+				action_function(game);
+				text_element.innerText = sokoban.game_to_text(game);
+			};
+			button.addEventListener('click', click_handler);
 		});
 	};
 
@@ -38,5 +50,7 @@
 		<button id="down" type="button">↓</button>
 		<button id="left" type="button">←</button>
 		<button id="right" type="button">→</button>
+		<button id="next_level" type="button">c</button>
+		<pre id="log"></pre>
 	</body>
 </html>
