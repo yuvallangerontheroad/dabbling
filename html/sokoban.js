@@ -68,7 +68,7 @@ let sokoban = (function() {
 			state.endings[y] = [];
 			for (let x = 0; x < lines[y].length; x++) {
 				if (lines[y][x] == '@') {
-					state.position = [x, y];
+					state.player_position = [x, y];
 					state.floors[y][x] = '.';
 				} else if (lines[y][x] == '*') {
 					state.rocks[y][x] = '*';
@@ -88,8 +88,8 @@ let sokoban = (function() {
 
 	function here_player(state, [x, y]) {
 		return (
-			state.position[0] == x &&
-			state.position[1] == y
+			state.player_position[0] == x &&
+			state.player_position[1] == y
 		);
 	}
 	function here_wall(state, [x, y]) {
@@ -124,9 +124,29 @@ let sokoban = (function() {
 	};
 
 
+	function copy_level_state(game) {
+		let state_copy = [
+			{},
+			'rocks',
+			'floors',
+			'walls',
+			'endings',
+		].reduce((acc, entity_name)=>{
+			acc[entity_name] = (
+				game
+				.level_state[entity_name]
+				.map(line=>line.map(c=>c))
+			);
+			return acc;
+		});
+		state_copy.player_position = game.level_state.player_position.map(p=>p);
+		return state_copy;
+	};
+
+
 	function action_step(game, direction) {
 		if (!is_won(game)) {
-			let p0 = game.level_state.position;
+			let p0 = game.level_state.player_position;
 			let p1 = [
 				p0[0] + direction[0],
 				p0[1] + direction[1]];
@@ -134,7 +154,6 @@ let sokoban = (function() {
 				p1[0] + direction[0],
 				p1[1] + direction[1]];
 
-			let is_walking = here_floor(game.level_state, p1);
 			let is_blocked = (
 				here_wall(game.level_state, p1) || (
 					here_rock(game.level_state, p1) && (
@@ -145,10 +164,13 @@ let sokoban = (function() {
 				!here_rock(game.level_state, p2));
 
 			if (!is_blocked) {
+				let old_state = copy_level_state(game);
+				console.log('old_state' + JSON.stringify(old_state));
+				game.undo_stack.push(old_state);
 				if (is_pushing) {
 					move_rock(game.level_state, p1, p2);
 				};
-				game.level_state.position = p1;
+				game.level_state.player_position = p1;
 			};
 		};
 	};
@@ -161,6 +183,7 @@ let sokoban = (function() {
 
 	function action_next_level(game) {
 		if (is_won(game) && game.current_level_number < levels.length) {
+			game.undo_stack = [];
 			game.current_level_number += 1;
 			game.level_state = read_level_text(levels[game.current_level_number]);
 		};
@@ -168,11 +191,20 @@ let sokoban = (function() {
 
 
 	function action_restart_level(game) {
+		game.undo_stack = [];
 		game.level_state = read_level_text(levels[game.current_level_number]);
 	};
 
 
+	function action_undo(game) {
+		if (game.undo_stack.length > 0) {
+			game.level_state = game.undo_stack.pop();
+		}
+	}
+
+
 	function game_to_text(game) {
+		console.log(game.undo_state);
 		let s = '';
 
 		if (is_won(game)) {
@@ -185,7 +217,7 @@ let sokoban = (function() {
 			game.level_state.endings.length,
 			game.level_state.floors.length,
 			game.level_state.walls.length,
-			game.level_state.position[1],
+			game.level_state.player_position[1],
 		);
 		for (let y = 0; y < max_y; y++) {
 			let max_x = Math.max(
@@ -193,7 +225,7 @@ let sokoban = (function() {
 				game.level_state.endings[y].length,
 				game.level_state.floors[y].length,
 				game.level_state.walls[y].length,
-				game.level_state.position[0],
+				game.level_state.player_position[0],
 			);
 			for (let x = 0; x < max_x; x++) {
 				if (here_player(game.level_state, [x, y])) {
@@ -219,8 +251,9 @@ let sokoban = (function() {
 
 	function load_game() {
 		let game = {
-			level_state: read_level_text(levels[0]),
 			current_level_number: 0,
+			level_state: read_level_text(levels[0]),
+			undo_stack: [],
 		};
 		return game;
 	};
@@ -233,6 +266,7 @@ let sokoban = (function() {
 		action_step_left,
 		action_step_right,
 		action_step_up,
+		action_undo,
 		game_to_text,
 		load_game,
 	};
