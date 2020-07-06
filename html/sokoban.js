@@ -164,8 +164,8 @@ let sokoban = (function() {
 				!here_rock(game.level_state, p2));
 
 			if (!is_blocked) {
+				game.number_of_steps += 1;
 				let old_state = copy_level_state(game);
-				console.log('old_state' + JSON.stringify(old_state));
 				game.undo_stack.push(old_state);
 				if (is_pushing) {
 					move_rock(game.level_state, p1, p2);
@@ -183,6 +183,7 @@ let sokoban = (function() {
 
 	function action_next_level(game) {
 		if (is_won(game) && game.current_level_number < levels.length) {
+			game.number_of_steps = 0;
 			game.undo_stack = [];
 			game.current_level_number += 1;
 			game.level_state = read_level_text(levels[game.current_level_number]);
@@ -198,6 +199,7 @@ let sokoban = (function() {
 
 	function action_undo(game) {
 		if (game.undo_stack.length > 0) {
+			game.number_of_steps -= 1;
 			game.level_state = game.undo_stack.pop();
 		}
 	}
@@ -210,7 +212,7 @@ let sokoban = (function() {
 		if (is_won(game)) {
 			s = s.concat('Won! Press c to continue.');
 		}
-		s = s.concat(`Level ${game.current_level_number + 1}`);
+		s = s.concat(`Level ${game.current_level_number + 1}. Step ${game.number_of_steps}.`);
 
 		let max_y = Math.max(
 			game.level_state.rocks.length,
@@ -254,6 +256,7 @@ let sokoban = (function() {
 			current_level_number: 0,
 			level_state: read_level_text(levels[0]),
 			undo_stack: [],
+			number_of_steps: 0,
 		};
 		return game;
 	};
