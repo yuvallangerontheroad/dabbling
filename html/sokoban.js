@@ -192,6 +192,7 @@ let sokoban = (function() {
 
 
 	function action_restart_level(game) {
+		game.number_of_steps = 0;
 		game.undo_stack = [];
 		game.level_state = read_level_text(levels[game.current_level_number]);
 	};
