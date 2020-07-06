@@ -167,6 +167,11 @@ let sokoban = (function() {
 	};
 
 
+	function action_restart_level(game) {
+		game.level_state = read_level_text(levels[game.current_level_number]);
+	};
+
+
 	function game_to_text(game) {
 		let s = '';
 
@@ -223,6 +228,7 @@ let sokoban = (function() {
 
 	return {
 		action_next_level,
+		action_restart_level,
 		action_step_down,
 		action_step_left,
 		action_step_right,

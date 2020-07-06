@@ -28,6 +28,8 @@ window.kakalog_activated = true;
 			['left', sokoban.action_step_left],
 			['right', sokoban.action_step_right],
 			['next_level', sokoban.action_next_level],
+			['restart_level', sokoban.action_restart_level],
+			['undo', sokoban.action_undo],
 		].forEach(([element_id, action_function])=>{
 			let button = document.getElementById(element_id);
 			console.debug(button)
@@ -51,6 +53,8 @@ window.kakalog_activated = true;
 		<button id="left" type="button">←</button>
 		<button id="right" type="button">→</button>
 		<button id="next_level" type="button">c</button>
+		<button id="restart_level" type="button">r</button>
+		<button id="undo" type="button">u</button>
 		<pre id="log"></pre>
 	</body>
 </html>
