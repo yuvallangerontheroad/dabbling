@@ -252,14 +252,13 @@ let sokoban = (function() {
 	};
 
 
-	function load_game() {
-		let game = {
+	function new_game() {
+		return {
 			current_level_number: 0,
 			level_state: read_level_text(levels[0]),
 			undo_stack: [],
 			number_of_steps: 0,
 		};
-		return game;
 	};
 
 
@@ -272,7 +271,7 @@ let sokoban = (function() {
 		action_step_up,
 		action_undo,
 		game_to_text,
-		load_game,
+		new_game,
 	};
 })();
 
