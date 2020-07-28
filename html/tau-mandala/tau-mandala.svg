@@ -34,7 +34,7 @@ for (let nagon = 3; nagon < 100; nagon++) {
 	let polygon_path = [];
 	for (let i = 0; i < nagon; i++) {
 		let angle = Math.TAU * i / nagon;
-		let point = rotate([0, radius], angle);
+		let point = rotate([0, -radius], angle);
 		polygon_path.push(point);
 	};
 	polygon_paths.push(polygon_path);
