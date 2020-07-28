@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 60 20">
+  <!--
+  <rect width="80" height="60" fill="#eee"/>
+  <text id="item" font-size="5px" x="2" y="8">External SVG Object</text>
+  -->
+  <script type="text/javascript"><![CDATA[
+'use strict';
+
+
+Math.TAU = 2 * Math.PI;
+
+function internal_angle(n) {
+	return (n - 2) * Math.TAU / (n * 2);
+};
+
+
+function rotate(point, angle) {
+	let [x, y] = point;
+	return [
+		x * Math.cos(angle) - y * Math.sin(angle),
+		x * Math.sin(angle) + y * Math.cos(angle),
+	];
+}
+
+
+let rs = [1.0];
+let polygon_paths = [];
+for (let nagon = 3; nagon < 100; nagon++) {
+	let radius = rs[rs.length - 1];
+	let internal_angle = (nagon - 2) * Math.TAU / (2 * nagon);
+	let moo = Math.sin(internal_angle / 2);
+	radius = radius / moo;
+	rs.push(radius);
+	let polygon_path = [];
+	for (let i = 0; i < nagon; i++) {
+		let angle = Math.TAU * i / nagon;
+		let point = rotate([0, radius], angle);
+		polygon_path.push(point);
+	};
+	polygon_paths.push(polygon_path);
+};
+
+
+let svg = document.getElementsByTagName('svg')[0];
+// svg.setAttributeNS(none, 'viewBox', '-10 -10 20 20');
+rs.forEach((r, i, rs)=>{
+	let element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+	element.setAttributeNS(null, 'cx', 0);
+	element.setAttributeNS(null, 'cy', 0);
+	element.setAttributeNS(null, 'r', r);
+	element.setAttributeNS(null, 'fill', 'none');
+	element.setAttributeNS(null, 'stroke', 'black');
+	element.setAttributeNS(null, 'stroke-width', 0.1 / (i + 1));
+	svg.appendChild(element);
+});
+
+polygon_paths.forEach((polygon_path, i, polygon_paths)=>{
+	let element = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+	let points = (
+		polygon_path
+		.map(point=>`${point[0]} ${point[1]}`)
+		.reduce((acc, x)=>acc.concat(' ').concat(x))
+	);
+	element.setAttributeNS(null, 'points', points);
+	element.setAttributeNS(null, 'fill', 'none');
+	element.setAttributeNS(null, 'stroke', 'black');
+	element.setAttributeNS(null, 'stroke-width', 0.2 / (i + 1));
+	svg.appendChild(element);
+});
+]]></script>
+</svg>
