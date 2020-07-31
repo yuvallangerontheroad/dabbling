@@ -1,8 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 60 20">
-  <!--
-  <rect width="80" height="60" fill="#eee"/>
-  <text id="item" font-size="5px" x="2" y="8">External SVG Object</text>
-  -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20">
   <script type="text/javascript"><![CDATA[
 'use strict';
 
@@ -13,24 +9,31 @@ function internal_angle(n) {
 	return (n - 2) * Math.TAU / (n * 2);
 };
 
+function set_view_box(svg_element, radius, margin) {
+	let high_margin = radius * (1 + margin);
+	let low_margin = -high_margin;
+	let width = high_margin - low_margin;
+	svg.setAttributeNS('http://www.w3.org/2000/svg', 'viewBox', `${low_margin} ${low_margin} ${width} ${width}`);
+};
+
 
 function rotate(point, angle) {
 	let [x, y] = point;
+	let [c_a, s_a] = [Math.cos(angle), Math.sin(angle)];
 	return [
-		x * Math.cos(angle) - y * Math.sin(angle),
-		x * Math.sin(angle) + y * Math.cos(angle),
+		x * c_a - y * s_a,
+		x * s_a + y * c_a,
 	];
-}
+};
 
 
-let rs = [1.0];
+let radiuses = [1.0];
 let polygon_paths = [];
 for (let nagon = 3; nagon < 100; nagon++) {
-	let radius = rs[rs.length - 1];
+	let radius = radiuses[radiuses.length - 1];
 	let internal_angle = (nagon - 2) * Math.TAU / (2 * nagon);
-	let moo = Math.sin(internal_angle / 2);
-	radius = radius / moo;
-	rs.push(radius);
+	radius = radius / Math.sin(internal_angle / 2);
+	radiuses.push(radius);
 	let polygon_path = [];
 	for (let i = 0; i < nagon; i++) {
 		let angle = Math.TAU * i / nagon;
@@ -42,8 +45,8 @@ for (let nagon = 3; nagon < 100; nagon++) {
 
 
 let svg = document.getElementsByTagName('svg')[0];
-// svg.setAttributeNS(none, 'viewBox', '-10 -10 20 20');
-rs.forEach((r, i, rs)=>{
+set_view_box(svg, radiuses[radiuses.length - 1], 0.1);
+radiuses.forEach((r, i, radiuses)=>{
 	let element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 	element.setAttributeNS(null, 'cx', 0);
 	element.setAttributeNS(null, 'cy', 0);
@@ -55,17 +58,26 @@ rs.forEach((r, i, rs)=>{
 });
 
 polygon_paths.forEach((polygon_path, i, polygon_paths)=>{
-	let element = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+	let polygon_element = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
 	let points = (
 		polygon_path
 		.map(point=>`${point[0]} ${point[1]}`)
 		.reduce((acc, x)=>acc.concat(' ').concat(x))
 	);
-	element.setAttributeNS(null, 'points', points);
-	element.setAttributeNS(null, 'fill', 'none');
-	element.setAttributeNS(null, 'stroke', 'black');
-	element.setAttributeNS(null, 'stroke-width', 0.2 / (i + 1));
-	svg.appendChild(element);
+	polygon_element.setAttributeNS(null, 'points', points);
+	polygon_element.setAttributeNS(null, 'fill', 'none');
+	polygon_element.setAttributeNS(null, 'stroke', 'black');
+	polygon_element.setAttributeNS(null, 'stroke-width', 0.2 / (i + 1));
+	let animate_transform_element = document.createElementNS('http://www.w3.org/2000/svg', 'animateTransform');
+	animate_transform_element.setAttributeNS(null, 'attributeName', 'transform');
+	animate_transform_element.setAttributeNS(null, 'attributeType', 'XML');
+	animate_transform_element.setAttributeNS(null, 'type', 'rotate');
+	animate_transform_element.setAttributeNS(null, 'from', '0 0 0');
+	animate_transform_element.setAttributeNS(null, 'to', '360 0 0');
+	animate_transform_element.setAttributeNS(null, 'dur', `${Math.log(i+10, 2)}s`);
+	animate_transform_element.setAttributeNS(null, 'repeatCount', 'indefinite');
+	polygon_element.appendChild(animate_transform_element);
+	svg.appendChild(polygon_element);
 });
 ]]></script>
 </svg>
