@@ -194,6 +194,22 @@ Math.TAU = 2 * Math.PI;
 		draw_stick_figure(stick_figure_positions);
 	}
 
+	function jump() {
+		let scream_audio_element = new Audio("freesound.org/data/previews/239/239900_4079949-lq.mp3");
+
+		scream_audio_element.play();
+
+		scream_audio_element.addEventListener('ended', function() {
+			let thump = new Audio("freesound.org/data/previews/344/344150_6179115-lq.mp3");
+
+			thump.currentTime = 0.2;
+
+			thump.play();
+
+			draw_jumper();
+		});
+	}
+
 	function clear_canvas() {
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
@@ -203,7 +219,7 @@ Math.TAU = 2 * Math.PI;
 
 	function main() {
 		let jump_button = document.getElementById('jump_button');
-		jump_button.addEventListener('click', draw_jumper);
+		jump_button.addEventListener('click', jump);
 
 		let clear_button = document.getElementById('clear_button');
 		clear_button.addEventListener('click', clear_canvas);
@@ -211,34 +227,3 @@ Math.TAU = 2 * Math.PI;
 
 	window.addEventListener('load', main);
 })();
-
-
-
-
-/*
-
-def main():
-    random.seed(0)
-
-    image_width, image_height = 500, 500
-
-    image = 255 * np.ones(shape=[image_width, image_height, 4], dtype=np.uint8)
-
-    for i in range(100):
-        stick_figure_positions = make_random_stick_figure_positions()
-
-        blood_splatter_positions = make_blood_splatter_positions(stick_figure_positions)
-
-        draw_blood_splatter(image, blood_splatter_positions)
-
-        draw_stick_figure(image, stick_figure_positions)
-
-        cv2.imwrite(f"prakdan_{i:02d}.png", image)
-
-    convert_process = Popen(['convert', 'prakdan_*.png', 'prakdan.gif'])
-
-    convert_process.wait()
-
-if __name__ == "__main__":
-    main()
-*/
