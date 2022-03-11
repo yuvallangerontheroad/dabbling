@@ -195,19 +195,19 @@ Math.TAU = 2 * Math.PI;
 	}
 
 	function jump() {
-		let scream_audio_element = new Audio("freesound.org/data/previews/239/239900_4079949-lq.mp3");
+		let scream_audio_element = document.getElementById('scream_audio').cloneNode(true);
 
 		scream_audio_element.play();
 
-		scream_audio_element.addEventListener('ended', function() {
-			let thump = new Audio("freesound.org/data/previews/344/344150_6179115-lq.mp3");
+		setTimeout(function() {
+			scream_audio_element.pause();
 
+			let thump = document.getElementById('thump_audio').cloneNode(true);
 			thump.currentTime = 0.2;
-
 			thump.play();
 
 			draw_jumper();
-		});
+		}, 1700);
 	}
 
 	function clear_canvas() {
