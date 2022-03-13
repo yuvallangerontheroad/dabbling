@@ -4,8 +4,16 @@
 Math.TAU = 2 * Math.PI;
 
 (function() {
+	let audio_context;
+	let scream_audio_data;
+	let thump_audio_data;
+
 	let BLOOD_COLOR = (0, 0, 255, 255);
 	let STICK_FIGURE_COLOR = (0, 0, 0, 255);
+
+	function lerp(portion, start, stop) {
+		return portion * (stop - start) + start;
+	}
 
 	function make_random_direction() {
 	    let uniform = Math.random();
@@ -194,20 +202,25 @@ Math.TAU = 2 * Math.PI;
 		draw_stick_figure(stick_figure_positions);
 	}
 
-	function jump() {
-		let scream_audio_element = document.getElementById('scream_audio').cloneNode(true);
 
-		scream_audio_element.play();
+	function jump() {
+		let scream_rate_fraction = lerp(Math.random(), 0.90, 1.45);
+		let scream_audio_buffer = make_audio_buffer(scream_audio_data, scream_rate_fraction);
+		let scream_source = make_audio_buffer_source(scream_audio_buffer);
+		scream_source.start();
 
 		setTimeout(function() {
-			scream_audio_element.pause();
+			scream_source.stop();
 
-			let thump = document.getElementById('thump_audio').cloneNode(true);
-			thump.currentTime = 0.2;
-			thump.play();
+			let thump_audio_buffer = make_audio_buffer(thump_audio_data, 1);
+			let thump_audio_source = make_audio_buffer_source(thump_audio_buffer);
+
+			thump_audio_source.currentTime = 0.2;
+
+			thump_audio_source.start()
 
 			draw_jumper();
-		}, 1700);
+		}, 1700.0 / scream_rate_fraction);
 	}
 
 	function clear_canvas() {
@@ -217,7 +230,53 @@ Math.TAU = 2 * Math.PI;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 	}
 
-	function main() {
+	async function get_audio_data(audio_file_path) {
+		let response = await fetch(audio_file_path);
+
+		let array_buffer = await response.arrayBuffer();
+
+		return await audio_context.decodeAudioData(array_buffer);
+	}
+
+	function make_audio_buffer(audio_data, sample_rate_fraction) {
+		let audio_buffer = audio_context.createBuffer(
+			audio_data.numberOfChannels,
+			audio_data.getChannelData(0).length,
+			audio_data.sampleRate * sample_rate_fraction,
+		);
+
+		for (let channel_number = 0; channel_number < audio_buffer.numberOfChannels; channel_number++) {
+			let current_buffer = audio_buffer.getChannelData(channel_number);
+			let audio_data_channel = audio_data.getChannelData(channel_number);
+
+			for (let sample_number = 0; sample_number < current_buffer.length; sample_number++) {
+				current_buffer[sample_number] = audio_data_channel[sample_number];
+			}
+		}
+
+		return audio_buffer;
+	}
+
+	function make_audio_buffer_source(audio_buffer) {
+		let buffer_source = audio_context.createBufferSource();
+
+		buffer_source.buffer = audio_buffer;
+
+		buffer_source.connect(audio_context.destination);
+
+		return buffer_source;
+	}
+
+	async function main() {
+		audio_context = new AudioContext();
+
+		let scream_audio_element = document.getElementById('scream_audio');
+		let thump_audio_element = document.getElementById('thump_audio');
+
+		scream_audio_data = await get_audio_data(scream_audio_element.src);
+		thump_audio_data = await get_audio_data(thump_audio_element.src);
+
+
 		let jump_button = document.getElementById('jump_button');
 		jump_button.addEventListener('click', jump);
 
