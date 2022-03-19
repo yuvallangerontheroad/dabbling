@@ -174,9 +174,22 @@ Math.TAU = 2 * Math.PI;
 		window.requestAnimationFrame(step)
 	}
 
+	function resize_window() {
+		// https://stackoverflow.com/a/32119392
+
+		let canvas = document.getElementById('canvas');
+
+		canvas.width = window.innerWidth;
+		canvas.style.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+		canvas.style.height = window.innerHeight;
+	}
+
 	function main() {
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
+
+		resize_window();
 
 		polygons_vertices = [[
 			[canvas.width / 2, canvas.height / 3],
@@ -189,6 +202,8 @@ Math.TAU = 2 * Math.PI;
 			uniform_random_direction(),
 			uniform_random_direction(),
 		].map(vertex => vertex.map(axis => pixels_per_step * axis));
+
+		window.addEventListener('resize', resize_window)
 
 		window.requestAnimationFrame(step);
 	}
