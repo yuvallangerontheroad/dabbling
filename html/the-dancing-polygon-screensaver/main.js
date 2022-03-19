@@ -13,6 +13,9 @@ Math.TAU = 2 * Math.PI;
 	let hsv_values = [[0, 1, 0.7]];
 	let color_wheel_velocity = 0.01;
 
+	let wanted_number_of_polygons = 50;
+	let pixels_per_step = 10;
+
 	function hsv_to_rgb(hue, saturation, value) {
 		// https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB
 		// H in [0, 1] (position on the color wheel)
@@ -101,6 +104,52 @@ Math.TAU = 2 * Math.PI;
 		return direction_vector;
 	}
 
+	function step_polygons() {
+		if (polygons_vertices.length >= wanted_number_of_polygons) {
+			// Remove oldest polygon, the one at position 0.
+			polygons_vertices = polygons_vertices.slice(1, polygons_vertices.length);
+		}
+
+		// Get the newest polygon at position n-1.
+		let current_polygon_vertices = polygons_vertices[polygons_vertices.length - 1];
+
+		// Clone our latest polygon.
+		let new_polygon_vertices = current_polygon_vertices.map(vertex => vertex.map(axis => axis));
+
+		move_polygon(new_polygon_vertices, polygon_velocity);
+
+		polygons_vertices.push(new_polygon_vertices);
+	}
+
+	function step_hsv_values() {
+		if (hsv_values.length >= wanted_number_of_polygons) {
+			// Remove oldest hsv value, the one at position 0.
+			hsv_values = hsv_values.slice(1, hsv_values.length);
+		}
+
+		// Get the newest hsv_value at position n-1.
+		let current_hsv_value = hsv_values[hsv_values.length - 1];
+
+		// Clone.
+		let new_hsv_value = current_hsv_value.map(axis => axis);
+
+		// Spin the hue around in the color wheel.
+		new_hsv_value[0] = (new_hsv_value[0] + color_wheel_velocity) % 1;
+
+		hsv_values.push(new_hsv_value);
+	}
+
+	function draw_polygons(ctx, polygons_vertices, hsv_values) {
+		for (let current_polygon = 0; current_polygon < polygons_vertices.length; current_polygon++) {
+			let rgb = hsv_to_rgb(
+				hsv_values[current_polygon][0],
+				hsv_values[current_polygon][1],
+				hsv_values[current_polygon][2],
+			).map(x => 255 * x);
+			draw_polygon(ctx, polygons_vertices[current_polygon], rgb);
+		}
+	}
+
 	function step(timestamp) {
 		if (start_time === undefined) {
 			start_time = timestamp;
@@ -115,36 +164,10 @@ Math.TAU = 2 * Math.PI;
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		if (polygons_vertices.length >= 50) {
-			// Remove oldest polygon, the one at position 0.
-			polygons_vertices = polygons_vertices.slice(1, polygons_vertices.length);
-			hsv_values = hsv_values.slice(1, hsv_values.length);
-		}
-		
-		// Get the newest polygon at position n-1.
-		let current_polygon_vertices = polygons_vertices[polygons_vertices.length - 1];
-		let current_hsv_value = hsv_values[hsv_values.length - 1];
+		step_polygons();
+		step_hsv_values();
 
-		// Clone our latest polygon.
-		let new_polygon_vertices = current_polygon_vertices.map(vertex => vertex.map(axis => axis));
-		let new_hsv_value = current_hsv_value.map(axis => axis);
-
-		move_polygon(new_polygon_vertices, polygon_velocity);
-		new_hsv_value[0] = (new_hsv_value[0] + color_wheel_velocity) % 1;
-
-		polygons_vertices.push(new_polygon_vertices);
-		hsv_values.push(new_hsv_value);
-
-		for (let current_polygon = 0; current_polygon < polygons_vertices.length; current_polygon++) {
-			let rgb = hsv_to_rgb(
-				hsv_values[current_polygon][0],
-				hsv_values[current_polygon][1],
-				hsv_values[current_polygon][2],
-			).map(x => 255 * x);
-			draw_polygon(ctx, polygons_vertices[current_polygon], rgb);
-		}
-
-		console.info(polygons_vertices);
+		draw_polygons(ctx, polygons_vertices, hsv_values);
 
 		previous_timestamp = timestamp;
 
@@ -165,7 +188,7 @@ Math.TAU = 2 * Math.PI;
 			uniform_random_direction(),
 			uniform_random_direction(),
 			uniform_random_direction(),
-		].map(vertex => vertex.map(axis => 10 * axis));
+		].map(vertex => vertex.map(axis => pixels_per_step * axis));
 
 		window.requestAnimationFrame(step);
 	}
