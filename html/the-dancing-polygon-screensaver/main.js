@@ -1,8 +1,40 @@
+'use strict;'
+
 Math.TAU = 2 * Math.PI;
 
 (function() {
 	let polygon_vertices = [];
 	let polygon_velocity = [];
+
+	let hsv = [0, 1, 0.7];
+	let color_wheel_velocity = 0.001;
+
+	function hsv_to_rgb(hue, saturation, value) {
+		// https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB
+		// H in [0, 1] (position on the color wheel)
+		// S in [0, 1]
+		// V in [0, 1]
+
+		let chroma = value * saturation;
+
+		let hue_tag = hue * 6;
+
+		let x = chroma * (1 - Math.abs((hue_tag % 2) - 1));
+
+		let [red_1, green_1, blue_1] = ((hue_tag, chroma, x)=>{
+			if (hue_tag >= 0 && hue_tag < 1) { return [chroma, x, 0];
+			} else if (hue_tag >= 1 && hue_tag < 2) { return [x, chroma, 0];
+			} else if (hue_tag >= 2 && hue_tag < 3) { return [0, chroma, x];
+			} else if (hue_tag >= 3 && hue_tag < 4) { return [0, x, chroma];
+			} else if (hue_tag >= 4 && hue_tag < 5) { return [x, 0, chroma];
+			} else if (hue_tag >= 5 && hue_tag < 6) { return [chroma, 0, x];
+			}
+		})(hue_tag, chroma, x);
+
+		let m = value - chroma;
+
+		return [red_1 + m, green_1 + m, blue_1 + m];
+	}
 
 	function move_and_bounce_1d(position, velocity, maximum_value) {
 		let new_position = position + velocity;
@@ -44,7 +76,9 @@ Math.TAU = 2 * Math.PI;
 	function draw_polygon(ctx, polygon_vertices) {
 		ctx.beginPath();
 
-		ctx.strokeStyle = "black";
+		let rgb = hsv_to_rgb(hsv[0], hsv[1], hsv[2]).map(x => 255 * x);
+
+		ctx.strokeStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 
 		ctx.moveTo(polygon_vertices[0][0], polygon_vertices[0][1]);
 
@@ -75,6 +109,8 @@ Math.TAU = 2 * Math.PI;
 		move_polygon(polygon_vertices, polygon_velocity);
 
 		draw_polygon(ctx, polygon_vertices);
+
+		hsv[0] = (hsv[0] + color_wheel_velocity) % 1;
 		
 		window.requestAnimationFrame(step)
 	}
