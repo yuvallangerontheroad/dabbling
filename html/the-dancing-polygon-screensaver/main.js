@@ -3,11 +3,15 @@
 Math.TAU = 2 * Math.PI;
 
 (function() {
-	let polygon_vertices = [];
+	let start_time;
+	let elapsed_time;
+	let previous_timestamp;
+
+	let polygons_vertices = [];
 	let polygon_velocity = [];
 
-	let hsv = [0, 1, 0.7];
-	let color_wheel_velocity = 0.001;
+	let hsv_values = [[0, 1, 0.7]];
+	let color_wheel_velocity = 0.01;
 
 	function hsv_to_rgb(hue, saturation, value) {
 		// https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB
@@ -73,10 +77,8 @@ Math.TAU = 2 * Math.PI;
 		}
 	};
 
-	function draw_polygon(ctx, polygon_vertices) {
+	function draw_polygon(ctx, polygon_vertices, rgb) {
 		ctx.beginPath();
-
-		let rgb = hsv_to_rgb(hsv[0], hsv[1], hsv[2]).map(x => 255 * x);
 
 		ctx.strokeStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 
@@ -99,19 +101,53 @@ Math.TAU = 2 * Math.PI;
 		return direction_vector;
 	}
 
-	function step(e) {
+	function step(timestamp) {
+		if (start_time === undefined) {
+			start_time = timestamp;
+		}
+
+		elapsed_time = timestamp - start_time;
+
+		delta_time = timestamp - previous_timestamp;
+
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
 
-
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		move_polygon(polygon_vertices, polygon_velocity);
-
-		draw_polygon(ctx, polygon_vertices);
-
-		hsv[0] = (hsv[0] + color_wheel_velocity) % 1;
+		if (polygons_vertices.length >= 50) {
+			// Remove oldest polygon, the one at position 0.
+			polygons_vertices = polygons_vertices.slice(1, polygons_vertices.length);
+			hsv_values = hsv_values.slice(1, hsv_values.length);
+		}
 		
+		// Get the newest polygon at position n-1.
+		let current_polygon_vertices = polygons_vertices[polygons_vertices.length - 1];
+		let current_hsv_value = hsv_values[hsv_values.length - 1];
+
+		// Clone our latest polygon.
+		let new_polygon_vertices = current_polygon_vertices.map(vertex => vertex.map(axis => axis));
+		let new_hsv_value = current_hsv_value.map(axis => axis);
+
+		move_polygon(new_polygon_vertices, polygon_velocity);
+		new_hsv_value[0] = (new_hsv_value[0] + color_wheel_velocity) % 1;
+
+		polygons_vertices.push(new_polygon_vertices);
+		hsv_values.push(new_hsv_value);
+
+		for (let current_polygon = 0; current_polygon < polygons_vertices.length; current_polygon++) {
+			let rgb = hsv_to_rgb(
+				hsv_values[current_polygon][0],
+				hsv_values[current_polygon][1],
+				hsv_values[current_polygon][2],
+			).map(x => 255 * x);
+			draw_polygon(ctx, polygons_vertices[current_polygon], rgb);
+		}
+
+		console.info(polygons_vertices);
+
+		previous_timestamp = timestamp;
+
 		window.requestAnimationFrame(step)
 	}
 
@@ -119,21 +155,17 @@ Math.TAU = 2 * Math.PI;
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
 
-		polygon_vertices = [
+		polygons_vertices = [[
 			[canvas.width / 2, canvas.height / 3],
 			[2 * canvas.width / 3, 2 * canvas.height / 3],
 			[canvas.width / 3, 2 * canvas.height / 3],
-		];
+		]];
 
 		polygon_velocity = [
 			uniform_random_direction(),
 			uniform_random_direction(),
 			uniform_random_direction(),
-		];
-
-		draw_polygon(ctx, polygon_vertices);
-
-		move_polygon(polygon_vertices, polygon_velocity);
+		].map(vertex => vertex.map(axis => 10 * axis));
 
 		window.requestAnimationFrame(step);
 	}
