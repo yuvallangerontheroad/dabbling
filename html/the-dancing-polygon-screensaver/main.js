@@ -185,12 +185,7 @@ Math.TAU = 2 * Math.PI;
 		canvas.style.height = window.innerHeight;
 	}
 
-	function main() {
-		let canvas = document.getElementById('canvas');
-		let ctx = canvas.getContext('2d');
-
-		resize_window();
-
+	function reset_world() {
 		polygons_vertices = [[
 			[canvas.width / 2, canvas.height / 3],
 			[2 * canvas.width / 3, 2 * canvas.height / 3],
@@ -202,6 +197,16 @@ Math.TAU = 2 * Math.PI;
 			uniform_random_direction(),
 			uniform_random_direction(),
 		].map(vertex => vertex.map(axis => pixels_per_step * axis));
+	}
+
+	function main() {
+		let canvas = document.getElementById('canvas');
+		let ctx = canvas.getContext('2d');
+
+		resize_window();
+		reset_world();
+
+		canvas.addEventListener('click', reset_world);
 
 		window.addEventListener('resize', resize_window)
 
