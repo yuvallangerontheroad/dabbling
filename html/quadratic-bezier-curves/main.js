@@ -40,8 +40,6 @@ Math.TAU = 2 * Math.PI;
 
 		let x = chroma * (1 - Math.abs((hue_tag % 2) - 1));
 
-		console.info(hue_tag);
-
 		let red_1, green_1, blue_1;
 
 		if (hue_tag >= 0 && hue_tag < 1) { 
@@ -92,13 +90,12 @@ Math.TAU = 2 * Math.PI;
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		draw_line(line_a, [255, 255, 255]);
-		draw_line(line_b, [255, 255, 255]);
+		//draw_line(line_a, [255, 255, 255]);
+		//draw_line(line_b, [255, 255, 255]);
 
 
 		for (let current_line_number = 0; current_line_number < WANTED_NUMBER_OF_LINES; current_line_number++) {
 			let bezier_curve_portion = current_line_number / (WANTED_NUMBER_OF_LINES - 1);
-			console.info(bezier_curve_portion);
 			let rgb = hsv_to_rgb(
 				bezier_curve_portion,
 				HSV_SATURATION_VALUE,
@@ -145,9 +142,7 @@ Math.TAU = 2 * Math.PI;
 		make_new_world();
 
 		canvas.addEventListener('click', function() {
-			console.info(line_a, line_b);
 			make_new_world();
-			console.info(line_a, line_b);
 			draw();
 		});
 
