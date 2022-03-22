@@ -276,6 +276,8 @@ Math.TAU = 2 * Math.PI;
 		scream_audio_data = await get_audio_data(scream_audio_element.src);
 		thump_audio_data = await get_audio_data(thump_audio_element.src);
 
+		let canvas = document.getElementById('canvas');
+		canvas.addEventListener('click', jump);
 
 		let jump_button = document.getElementById('jump_button');
 		jump_button.addEventListener('click', jump);
