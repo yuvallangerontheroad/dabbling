@@ -1,5 +1,5 @@
 (function() {
-	let number_of_rectangles = 1;
+	let number_of_rectangles = 2;
 	let factor = 2;
 	const INTERVAL = 750;
 
@@ -84,7 +84,7 @@
 				if (number_of_rectangles > canvas.width) {
 					factor = 0.5;
 					number_of_rectangles = 2**Math.floor(Math.log2(canvas.width));
-				} else if (number_of_rectangles < 1) {
+				} else if (number_of_rectangles <= 2) {
 					factor = 2;
 					number_of_rectangles = 2;
 				}
