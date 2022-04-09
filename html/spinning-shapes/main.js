@@ -3,11 +3,20 @@ Math.TAU = 2 * Math.PI;
 (function() {
 	let turn = 0;
 	let last_time = 0;
+	let math_ts;
+	let math_yss;
+	let canvas_ts;
+	let canvas_yss;
+
 	const NUMBER_OF_POLYGONS = 7;
 	const POLYGON_HEIGHT_MARGIN = 0.075;
 	const TURN_PER_MILLISECOND = 0.0005;
 	const CYCLE_LENGTH = 20;
-	const NUMBER_OF_SAMPLES = 300;
+	const NUMBER_OF_SAMPLES = 500;
+	const START_T = 0;
+	const END_T = CYCLE_LENGTH;
+
+
 
 	const functions = [
 		turn => step_on(turn % CYCLE_LENGTH, 1, 1.5) - step_on(turn % CYCLE_LENGTH, 2, 2.5) +
@@ -21,6 +30,7 @@ Math.TAU = 2 * Math.PI;
 			step_on(turn % CYCLE_LENGTH, 14.5, 15) - step_on(turn % CYCLE_LENGTH, 15.5, 16) +
 			step_on(turn % CYCLE_LENGTH, 16.5, 17) - step_on(turn % CYCLE_LENGTH, 17.5, 18) +
 			step_on(turn % CYCLE_LENGTH, 18.5, 19) - step_on(turn % CYCLE_LENGTH, 19.5, 20),
+		turn => Math.sin(turn * Math.TAU / 10),
 	];
 
 	function quadratic_stepper(t) {
@@ -120,13 +130,7 @@ Math.TAU = 2 * Math.PI;
 		ctx.beginPath();
 		ctx.strokeStyle = 'white';
 
-		let start_t = -1;
-		let end_t = CYCLE_LENGTH;
-
-
-		ctx.moveTo(start_t, quadratic_stepper(-1) * canvas.width);
-
-		let ts = linspace(start_t, end_t, NUMBER_OF_SAMPLES);
+		ctx.moveTo(START_T, functions[0](-1) * canvas.width);
 
 		ctx.lineWidth = 2;
 
@@ -139,24 +143,9 @@ Math.TAU = 2 * Math.PI;
 			let y_top = polygon_i * canvas.height / NUMBER_OF_POLYGONS;
 			let y_bottom = (polygon_i + 1) * canvas.height / NUMBER_OF_POLYGONS;
 
-			let ys = ts.map(functions[0]);
-
-			let canvas_ts = ts.map(t => superlerp(t, start_t, end_t, 0, canvas.width));
-			let canvas_ys = ys.map(y => superlerp(y, -0.2, 1.2, y_bottom, y_top))
-
-			/*
-			let canvas_points = ys.map(
-				t => from_math_coordinates_to_canvas_coordinates(
-					t,
-					step_on_step_off(t, -0.5, 0, 0.5, 1),
-					[-1, 2],
-					[-1, 2],
-				)
-			);
-			*/
-			ctx.moveTo(canvas_ts[0], canvas_ys[0]);
+			ctx.moveTo(canvas_ts[0], canvas_yss[polygon_i][0]);
 			for (let point_i = 1; point_i < NUMBER_OF_SAMPLES; point_i++) {
-				ctx.lineTo(canvas_ts[point_i], canvas_ys[point_i]);
+				ctx.lineTo(canvas_ts[point_i], canvas_yss[polygon_i][point_i]);
 			}
 			ctx.stroke();
 
@@ -168,10 +157,12 @@ Math.TAU = 2 * Math.PI;
 				canvas.height * (1 - POLYGON_HEIGHT_MARGIN),
 			);
 
-			let current_math_t = turn % CYCLE_LENGTH;
-			let current_canvas_t = superlerp(current_math_t, start_t, end_t, 0, canvas.width);
-			let current_math_y = functions[0](current_math_t);
-			let current_canvas_y = superlerp(current_math_y, -0.2, 1.2, y_bottom, y_top);
+			let current_sample_i = Math.floor(turn / CYCLE_LENGTH * canvas_ts.length) % canvas_ts.length
+			let current_math_t = math_ts[current_sample_i]; //superlerp(current_math_t, START_T, END_T, 0, canvas.width);
+			let current_canvas_t = canvas_ts[current_sample_i];
+			let current_math_y = math_yss[polygon_i][current_sample_i];
+			//let current_math_y = functions[1](current_math_t);
+			let current_canvas_y = canvas_yss[polygon_i][current_sample_i]; // superlerp(current_math_y, -1.2, 1.2, y_bottom, y_top);
 
 			ctx.stroke(
 				make_regular_polygon_path2d(
@@ -198,7 +189,45 @@ Math.TAU = 2 * Math.PI;
 		window.requestAnimationFrame(step);
 	}
 
+	function resize_window() {
+		// https://stackoverflow.com/a/32119392
+
+		let canvas = document.getElementById('canvas');
+
+		canvas.width = window.innerWidth;
+		canvas.style.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+		canvas.style.height = window.innerHeight;
+
+		load_data();
+	}
+
+	function load_data() {
+		let canvas = document.getElementById('canvas');
+
+		math_ts = Float32Array.from(linspace(START_T, END_T, NUMBER_OF_SAMPLES));
+		math_yss = [];
+		canvas_yss = [];
+		for (let polygon_i = 0; polygon_i < NUMBER_OF_POLYGONS; polygon_i++) {
+			math_yss.push(Float32Array.from(math_ts));
+			for (let t_i = 0; t_i < math_ts.length; t_i++) {
+				let y = functions[0](math_ts[t_i]);
+				math_yss[polygon_i][t_i] = y;
+			}
+
+			let y_top = polygon_i * canvas.height / NUMBER_OF_POLYGONS;
+			let y_bottom = (polygon_i + 1) * canvas.height / NUMBER_OF_POLYGONS;
+
+			canvas_ts = math_ts.map(t => superlerp(t, START_T, END_T, 0, canvas.width));
+			canvas_yss[polygon_i] = math_yss[polygon_i].map(y => superlerp(y, -1.2, 1.2, y_bottom, y_top));
+		}
+	}
+
 	function main() {
+		resize_window();
+		load_data();
+
+		window.addEventListener('resize', resize_window)
 		window.requestAnimationFrame(step);
 	}
 
