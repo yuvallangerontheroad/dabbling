@@ -119,6 +119,41 @@ Math.TAU = 2 * Math.PI;
 		return l;
 	}
 
+	function draw_polygon(number_of_sides, turn, polygon_center_y) {
+		let canvas = document.getElementById('canvas');
+		let ctx = canvas.getContext('2d');
+
+		ctx.stroke(
+			make_regular_polygon_path2d(
+				canvas.width / 2,
+				polygon_center_y,
+				20 * canvas.height / 500,
+				number_of_sides,
+				turn,
+			),
+		);
+	}
+
+	function draw_graph(polygon_i) {
+		let canvas = document.getElementById('canvas');
+		let ctx = canvas.getContext('2d');
+
+		ctx.moveTo(canvas_ts[0], canvas_yss[polygon_i][0]);
+		for (let point_i = 1; point_i < NUMBER_OF_SAMPLES; point_i++) {
+			ctx.lineTo(canvas_ts[point_i], canvas_yss[polygon_i][point_i]);
+		}
+		ctx.stroke();
+	}
+
+	function draw_position_circle(x, y) {
+		let canvas = document.getElementById('canvas');
+		let ctx = canvas.getContext('2d');
+
+		ctx.beginPath();
+		ctx.arc(x, y, canvas.height / 80, 0, Math.TAU, false);
+		ctx.stroke();
+	}
+
 	function draw() {
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
@@ -140,15 +175,11 @@ Math.TAU = 2 * Math.PI;
 		// 0, 0.5(0.9h), 0.9h / +h0.05
 		// 50, 0.5(h-100)+0.05h, 0.9h+0.05h
 		for (let polygon_i = 0; polygon_i < NUMBER_OF_POLYGONS; polygon_i++) {
+			// top and bottom of the are dedicated to this graph.
 			let y_top = polygon_i * canvas.height / NUMBER_OF_POLYGONS;
 			let y_bottom = (polygon_i + 1) * canvas.height / NUMBER_OF_POLYGONS;
 
-			ctx.moveTo(canvas_ts[0], canvas_yss[polygon_i][0]);
-			for (let point_i = 1; point_i < NUMBER_OF_SAMPLES; point_i++) {
-				ctx.lineTo(canvas_ts[point_i], canvas_yss[polygon_i][point_i]);
-			}
-			ctx.stroke();
-
+			// the vertical value of the center of the current polygon.
 			let polygon_y = superlerp(
 				polygon_i,
 				0,
@@ -157,27 +188,19 @@ Math.TAU = 2 * Math.PI;
 				canvas.height * (1 - POLYGON_HEIGHT_MARGIN),
 			);
 
-			let current_sample_i = Math.floor(turn / CYCLE_LENGTH * canvas_ts.length) % canvas_ts.length
+			// Get all cached values of the mathematical and graphical
+			let current_sample_i = Math.floor(turn / CYCLE_LENGTH * canvas_ts.length) % canvas_ts.length;
 			let current_math_t = math_ts[current_sample_i]; //superlerp(current_math_t, START_T, END_T, 0, canvas.width);
 			let current_canvas_t = canvas_ts[current_sample_i];
 			let current_math_y = math_yss[polygon_i][current_sample_i];
 			//let current_math_y = functions[1](current_math_t);
 			let current_canvas_y = canvas_yss[polygon_i][current_sample_i]; // superlerp(current_math_y, -1.2, 1.2, y_bottom, y_top);
 
-			ctx.stroke(
-				make_regular_polygon_path2d(
-					canvas.width / 2,
-					polygon_y,
-					20 * canvas.height / 500,
-					polygon_i + 3,
-					current_math_y,
-				),
-			);
+			draw_graph(polygon_i);
 
-			ctx.moveTo(current_canvas_t, current_canvas_y);
+			draw_position_circle(current_canvas_t, current_canvas_y);
 
-			ctx.arc(current_canvas_t, current_canvas_y, canvas.height / 80, 0, Math.TAU, false);
-			ctx.stroke();
+			draw_polygon(polygon_i + 3, current_math_y, polygon_y);
 		}
 	}
 
@@ -199,22 +222,26 @@ Math.TAU = 2 * Math.PI;
 		canvas.height = window.innerHeight;
 		canvas.style.height = window.innerHeight;
 
-		load_data();
+		cache_canvas_data();
 	}
 
-	function load_data() {
-		let canvas = document.getElementById('canvas');
-
+	function cache_math_data() {
 		math_ts = Float32Array.from(linspace(START_T, END_T, NUMBER_OF_SAMPLES));
 		math_yss = [];
-		canvas_yss = [];
 		for (let polygon_i = 0; polygon_i < NUMBER_OF_POLYGONS; polygon_i++) {
 			math_yss.push(Float32Array.from(math_ts));
 			for (let t_i = 0; t_i < math_ts.length; t_i++) {
 				let y = functions[0](math_ts[t_i]);
 				math_yss[polygon_i][t_i] = y;
 			}
+		}
+	}
 
+	function cache_canvas_data() {
+		let canvas = document.getElementById('canvas');
+
+		canvas_yss = [];
+		for (let polygon_i = 0; polygon_i < NUMBER_OF_POLYGONS; polygon_i++) {
 			let y_top = polygon_i * canvas.height / NUMBER_OF_POLYGONS;
 			let y_bottom = (polygon_i + 1) * canvas.height / NUMBER_OF_POLYGONS;
 
@@ -224,8 +251,8 @@ Math.TAU = 2 * Math.PI;
 	}
 
 	function main() {
+		cache_math_data();
 		resize_window();
-		load_data();
 
 		window.addEventListener('resize', resize_window)
 		window.requestAnimationFrame(step);
