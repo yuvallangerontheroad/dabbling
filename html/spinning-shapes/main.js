@@ -289,7 +289,7 @@ Math.TAU = 2 * Math.PI;
 					math_graph_y_extents[polygon_i][0],
 					math_graph_y_extents[polygon_i][1],
 					y_bottom, y_top));
-			canvas_polygon_radiuses[polygon_i] = math_polygon_radiuses[polygon_i].map(x => x * (500 / canvas.height) * 100)
+			canvas_polygon_radiuses[polygon_i] = math_polygon_radiuses[polygon_i].map(x => x * (canvas.height / 500) * 100)
 		}
 	}
 
