@@ -5,8 +5,10 @@ Math.TAU = 2 * Math.PI;
 	let last_time = 0;
 	let math_ts;
 	let math_yss;
+	let math_polygon_radiuses;
 	let canvas_ts;
 	let canvas_yss;
+	let canvas_polygon_radiuses;
 
 	const NUMBER_OF_POLYGONS = 7;
 	const POLYGON_HEIGHT_MARGIN = 0.075;
@@ -15,10 +17,20 @@ Math.TAU = 2 * Math.PI;
 	const NUMBER_OF_SAMPLES = 500;
 	const START_T = 0;
 	const END_T = CYCLE_LENGTH;
+	const math_graph_y_extents = [
+		[-1.2, 1.2],
+		[-1.2, 1.2],
+		[-1.2, 1.2],
+		[-1.2, 1.2],
+		[-1.2, 1.2],
+		[-1.2, 1.2],
+		[-1.2, 1.2],
+	];
 
 
 
 	const functions = [
+		/*
 		turn => step_on(turn % CYCLE_LENGTH, 1, 1.5) - step_on(turn % CYCLE_LENGTH, 2, 2.5) +
 			step_on(turn % CYCLE_LENGTH, 3, 3.5) - step_on(turn % CYCLE_LENGTH, 4, 4.5) +
 			step_on(turn % CYCLE_LENGTH, 5, 5.5) - step_on(turn % CYCLE_LENGTH, 6, 6.5) +
@@ -30,7 +42,14 @@ Math.TAU = 2 * Math.PI;
 			step_on(turn % CYCLE_LENGTH, 14.5, 15) - step_on(turn % CYCLE_LENGTH, 15.5, 16) +
 			step_on(turn % CYCLE_LENGTH, 16.5, 17) - step_on(turn % CYCLE_LENGTH, 17.5, 18) +
 			step_on(turn % CYCLE_LENGTH, 18.5, 19) - step_on(turn % CYCLE_LENGTH, 19.5, 20),
-		turn => Math.sin(turn * Math.TAU / 10),
+		*/
+		turn => Math.sin(turn * Math.TAU / 20 * 7),
+		turn => Math.sin(turn * Math.TAU / 20 * 6),
+		turn => Math.sin(turn * Math.TAU / 20 * 5),
+		turn => Math.sin(turn * Math.TAU / 20 * 4),
+		turn => Math.sin(turn * Math.TAU / 20 * 3),
+		turn => Math.sin(turn * Math.TAU / 20 * 2),
+		turn => Math.sin(turn * Math.TAU / 20),
 	];
 
 	function quadratic_stepper(t) {
@@ -119,15 +138,27 @@ Math.TAU = 2 * Math.PI;
 		return l;
 	}
 
-	function draw_polygon(number_of_sides, turn, polygon_center_y) {
+	function draw_polygon(number_of_sides, turn, polygon_center_y, polygon_radius_addition) {
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
 
+		ctx.beginPath()
+		ctx.fillStyle = '#f0f'; // Fuchia from https://www.w3schools.com/colors/colors_names.asp
+		ctx.strokeStyle = '#f0f';
+		ctx.fill(
+			make_regular_polygon_path2d(
+				canvas.width / 2,
+				polygon_center_y,
+				20 * canvas.height / 500 + polygon_radius_addition,
+				number_of_sides,
+				turn,
+			),
+		);
 		ctx.stroke(
 			make_regular_polygon_path2d(
 				canvas.width / 2,
 				polygon_center_y,
-				20 * canvas.height / 500,
+				20 * canvas.height / 500 + polygon_radius_addition,
 				number_of_sides,
 				turn,
 			),
@@ -138,6 +169,8 @@ Math.TAU = 2 * Math.PI;
 		let canvas = document.getElementById('canvas');
 		let ctx = canvas.getContext('2d');
 
+		ctx.beginPath()
+		ctx.strokeStyle = 'white';
 		ctx.moveTo(canvas_ts[0], canvas_yss[polygon_i][0]);
 		for (let point_i = 1; point_i < NUMBER_OF_SAMPLES; point_i++) {
 			ctx.lineTo(canvas_ts[point_i], canvas_yss[polygon_i][point_i]);
@@ -150,8 +183,9 @@ Math.TAU = 2 * Math.PI;
 		let ctx = canvas.getContext('2d');
 
 		ctx.beginPath();
+		ctx.fillStyle = "#00bfff"; // DeepSkyBlue from https://www.w3schools.com/colors/colors_names.asp
 		ctx.arc(x, y, canvas.height / 80, 0, Math.TAU, false);
-		ctx.stroke();
+		ctx.fill();
 	}
 
 	function draw() {
@@ -165,7 +199,7 @@ Math.TAU = 2 * Math.PI;
 		ctx.beginPath();
 		ctx.strokeStyle = 'white';
 
-		ctx.moveTo(START_T, functions[0](-1) * canvas.width);
+		//ctx.moveTo(START_T, functions[polygon_i](-1) * canvas.width);
 
 		ctx.lineWidth = 2;
 
@@ -198,9 +232,9 @@ Math.TAU = 2 * Math.PI;
 
 			draw_graph(polygon_i);
 
-			draw_position_circle(current_canvas_t, current_canvas_y);
+			draw_polygon(polygon_i + 3, current_math_y, polygon_y, canvas_polygon_radiuses[polygon_i][current_sample_i]);
 
-			draw_polygon(polygon_i + 3, current_math_y, polygon_y);
+			draw_position_circle(current_canvas_t, current_canvas_y);
 		}
 	}
 
@@ -228,12 +262,14 @@ Math.TAU = 2 * Math.PI;
 	function cache_math_data() {
 		math_ts = Float32Array.from(linspace(START_T, END_T, NUMBER_OF_SAMPLES));
 		math_yss = [];
+		math_polygon_radiuses = [];
 		for (let polygon_i = 0; polygon_i < NUMBER_OF_POLYGONS; polygon_i++) {
 			math_yss.push(Float32Array.from(math_ts));
 			for (let t_i = 0; t_i < math_ts.length; t_i++) {
-				let y = functions[0](math_ts[t_i]);
+				let y = functions[polygon_i](math_ts[t_i]);
 				math_yss[polygon_i][t_i] = y;
 			}
+			math_polygon_radiuses[polygon_i] = math_yss[polygon_i].map(y => (y > 0.7) ? (y - 0.7) : 0);
 		}
 	}
 
@@ -241,12 +277,19 @@ Math.TAU = 2 * Math.PI;
 		let canvas = document.getElementById('canvas');
 
 		canvas_yss = [];
+		canvas_polygon_radiuses = [];
 		for (let polygon_i = 0; polygon_i < NUMBER_OF_POLYGONS; polygon_i++) {
 			let y_top = polygon_i * canvas.height / NUMBER_OF_POLYGONS;
 			let y_bottom = (polygon_i + 1) * canvas.height / NUMBER_OF_POLYGONS;
 
 			canvas_ts = math_ts.map(t => superlerp(t, START_T, END_T, 0, canvas.width));
-			canvas_yss[polygon_i] = math_yss[polygon_i].map(y => superlerp(y, -1.2, 1.2, y_bottom, y_top));
+			canvas_yss[polygon_i] = math_yss[polygon_i].map(
+				y => superlerp(
+					y,
+					math_graph_y_extents[polygon_i][0],
+					math_graph_y_extents[polygon_i][1],
+					y_bottom, y_top));
+			canvas_polygon_radiuses[polygon_i] = math_polygon_radiuses[polygon_i].map(x => x * (500 / canvas.height) * 100)
 		}
 	}
 
